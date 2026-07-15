@@ -16,6 +16,8 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
+   If Expo Go shows an update or incompatibility warning after scanning the QR code, reinstall Expo Go from the Play Store or use a development build for this project.
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)

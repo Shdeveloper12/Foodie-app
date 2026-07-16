@@ -1,17 +1,58 @@
 import { useState } from "react";
 import { Image, Pressable, ScrollView, StatusBar, Text, TextInput, View } from "react-native";
 
+import Modal from "react-native-modal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState("");
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [bloodGroup, setBloodGroup] = useState("");
 
+  const handleRegister = () => {
+    let isValid = true;
+    
+        if (!name.trim()) {
+          setNameError("Name is required *");
+          isValid = false;
+        } else {
+          setNameError("");
+        }
+
+        if (!email.trim()) {
+          setEmailError("Email is required *");
+          isValid = false;
+        } else {
+          setEmailError("");
+        }
+    
+        if (!password.trim()) {
+          setPasswordError("Password is required *");
+          isValid = false;
+        } else {
+          setPasswordError("");
+        }
+    
+        if (isValid) {
+          setIsSuccessModalVisible(true);
+        }
+  };
+
+  const handleSuccessConfirm = () => {
+    setIsSuccessModalVisible(false);
+    router.replace("/home");
+  };
+
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "none"];
+
+
 
   return (
     <SafeAreaView className="flex-1 bg-[#E7DFD3]">
@@ -46,6 +87,7 @@ export default function RegisterScreen() {
                   className="mt-2 text-[15px] text-[#1B1916]"
                 />
               </View>
+              {nameError ? <Text className="-mt-2 px-1 text-[12px] font-medium text-[#D97757]">{nameError}</Text> : null}
               <View className="rounded-[24px] border-[2px] border-[#e6cfac] bg-white px-4 py-4">
                 <Text className="text-[12px] font-semibold uppercase tracking-[1.4px] text-[#7e7263]">
                   Blood Group
@@ -96,7 +138,7 @@ export default function RegisterScreen() {
                   className="mt-2 text-[15px] text-[#1B1916]"
                 />
               </View>
-
+                  {emailError ? <Text className="-mt-2 px-1 text-[12px] font-medium text-[#D97757]">{emailError}</Text> : null}
               <View className="rounded-[24px] bg-white px-4 py-4 border-[2px] border-[#e6cfac]">
                 <Text className="text-[12px] font-semibold uppercase tracking-[1.4px] text-[#7e7263]">Password</Text>
                 <TextInput
@@ -108,12 +150,14 @@ export default function RegisterScreen() {
                   className="mt-2 text-[15px] text-[#1B1916]"
                 />
               </View>
+                  {passwordError ? <Text className="-mt-2 px-1 text-[12px] font-medium text-[#D97757]">{passwordError}</Text> : null}
             </View>
           </View>
 
           <View className="gap-3">
             <Pressable
-              onPress={() => router.replace("/home")}
+            onPress={handleRegister}
+             
               className="items-center justify-center rounded-full bg-[#111111] px-5 py-4 active:opacity-90"
             >
               <Text className="text-[15px] font-semibold text-[#F5EFE4]">Register</Text>
@@ -128,6 +172,33 @@ export default function RegisterScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <Modal
+        isVisible={isSuccessModalVisible}
+        onBackdropPress={handleSuccessConfirm}
+        onBackButtonPress={handleSuccessConfirm}
+        backdropOpacity={0.45}
+        useNativeDriver
+        hideModalContentWhileAnimating
+      >
+        <View className="overflow-hidden rounded-[30px] bg-white px-6 py-7">
+          <View className="mx-auto h-16 w-16 items-center justify-center rounded-full bg-[#EAF6EE]">
+            <Text className="text-[28px]">✓</Text>
+          </View>
+
+          <Text className="mt-5 text-center text-[24px] font-semibold text-[#171511]">Success</Text>
+          <Text className="mt-2 text-center text-[15px] leading-[22px] text-[#6F685F]">
+            Registration successful!
+          </Text>
+
+          <Pressable
+            onPress={handleSuccessConfirm}
+            className="mt-6 items-center justify-center rounded-full bg-[#111111] px-5 py-4 active:opacity-90"
+          >
+            <Text className="text-[15px] font-semibold text-[#F5EFE4]">Continue</Text>
+          </Pressable>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

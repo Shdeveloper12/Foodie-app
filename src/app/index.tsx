@@ -270,12 +270,12 @@ export default function Index() {
   return (
     <SafeAreaView className="flex-1 bg-[#E7DFD3]">
       <StatusBar barStyle="dark-content" backgroundColor="#E7DFD3" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-4 pb-6 pt-2">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="">
         <View className="rounded-[32px] bg-[#E7DFD3] px-2 pb-6 pt-2">
           <View className="flex-row items-center justify-between px-2">
             <View className="flex-row items-center gap-3">
               <Image
-                source={require("../../assets/images/react-logo.png")}
+                source={require("../../assets/images/icon-256x256.png")}
                 className="h-12 w-12 rounded-full"
                 resizeMode="cover"
               />

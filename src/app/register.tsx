@@ -9,13 +9,16 @@ export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [bloodGroup, setBloodGroup] = useState("");
+
+  const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "none"];
 
   return (
     <SafeAreaView className="flex-1 bg-[#E7DFD3]">
       <StatusBar barStyle="dark-content" backgroundColor="#E7DFD3" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="flex-grow px-5 pb-8 pt-4">
         <View className="flex-1 justify-between rounded-[32px] bg-[#E7DFD3] px-3 py-3">
-          <View>
+          <View className="pb-5">
             <Pressable onPress={() => router.back()} className="mb-6 self-start rounded-full bg-white px-4 py-2">
               <Text className="text-[13px] font-semibold text-[#1B1916]">Back</Text>
             </Pressable>
@@ -42,6 +45,43 @@ export default function RegisterScreen() {
                   placeholderTextColor="#8E867B"
                   className="mt-2 text-[15px] text-[#1B1916]"
                 />
+              </View>
+              <View className="rounded-[24px] border-[2px] border-[#e6cfac] bg-white px-4 py-4">
+                <Text className="text-[12px] font-semibold uppercase tracking-[1.4px] text-[#7e7263]">
+                  Blood Group
+                </Text>
+
+                <View className="mt-3 flex-row flex-wrap gap-2">
+                  {bloodGroups.map((group) => {
+                    const isSelected = bloodGroup === group;
+
+                    return (
+                      <Pressable
+                        key={group}
+                        onPress={() => setBloodGroup(group)}
+                        className={
+                          isSelected
+                            ? "rounded-full bg-[#111111] px-4 py-2"
+                            : "rounded-full border border-[#e6cfac] bg-[#fffaf3] px-4 py-2"
+                        }
+                      >
+                        <Text
+                          className={
+                            isSelected
+                              ? "text-[13px] font-semibold text-[#F5EFE4]"
+                              : "text-[13px] font-semibold text-[#1B1916]"
+                          }
+                        >
+                          {group}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <Text className="mt-3 text-[12px] text-[#6F685F]">
+                  Selected: {bloodGroup || "Choose your blood group"}
+                </Text>
               </View>
 
               <View className="rounded-[24px] bg-white px-4 py-4 border-[2px] border-[#e6cfac]">

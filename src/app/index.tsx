@@ -1,5 +1,16 @@
-import { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, StatusBar, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import type { ComponentType } from "react";
+import {
+  Animated,
+  Easing,
+  Image,
+  Pressable,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import * as Location from "expo-location";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,17 +26,39 @@ import {
   Star,
 } from "lucide-react-native";
 
-const categories = [
+type Category = {
+  label: string;
+  icon: ComponentType<{ size?: number; color?: string }>;
+  active: boolean;
+};
+
+type Place = {
+  rating: string;
+  name: string;
+  location: string;
+  price: string;
+  unit: string;
+  details: string;
+  tint: string;
+};
+
+type LiveLocation = {
+  label: string;
+  details: string;
+};
+
+const categories: Category[] = [
   { label: "Flight", icon: Plane, active: false },
   { label: "Hotel", icon: Building2, active: true },
   { label: "Car Hire", icon: CarFront, active: false },
   { label: "Bike", icon: MapPin, active: false },
 ];
 
-const featuredPlaces = [
+const featuredPlaces: Place[] = [
   {
     rating: "4.9",
     name: "Pine Ridge Retreat",
+    location: "Paris, France",
     price: "$220",
     unit: "/night",
     details: "1 room, 2 adults, 1 children",
@@ -34,17 +67,13 @@ const featuredPlaces = [
   {
     rating: "5.0",
     name: "Harbor Line Suites",
+    location: "Barcelona, Spain",
     price: "$180",
     unit: "/night",
     details: "2 rooms, 3 adults, breakfast included",
     tint: "#8A6A43",
   },
 ];
-
-type LiveLocation = {
-  label: string;
-  details: string;
-};
 
 const locationFallback: LiveLocation = {
   label: "Locating your stay...",
@@ -55,11 +84,7 @@ function CategoryChip({
   label,
   icon: Icon,
   active,
-}: {
-  label: string;
-  icon: React.ComponentType<{ size?: number; color?: string }>;
-  active: boolean;
-}) {
+}: Category) {
   return (
     <Pressable
       className={
@@ -69,45 +94,21 @@ function CategoryChip({
       }
     >
       <Icon size={16} color={active ? "#F5EFE4" : "#1f1a17"} />
-      <Text
-        className={
-          active
-            ? "text-[13px] font-semibold text-[#F5EFE4]"
-            : "text-[13px] font-semibold text-[#1f1a17]"
-        }
-      >
+      <Text className={active ? "text-[13px] font-semibold text-[#F5EFE4]" : "text-[13px] font-semibold text-[#1f1a17]"}>
         {label}
       </Text>
     </Pressable>
   );
 }
 
-function HotelCard({
-  rating,
-  name,
-  price,
-  unit,
-  details,
-  tint,
-  index,
-}: {
-  rating: string;
-  name: string;
-  price: string;
-  unit: string;
-  details: string;
-  tint: string;
-  index: number;
-}) {
+function HotelCard({ place, index }: { place: Place; index: number }) {
   return (
     <View className="overflow-hidden rounded-[28px] bg-white">
       <View className="relative h-[230px] overflow-hidden rounded-[28px] bg-[#2B2B2B]">
         <View className="absolute left-3 top-3 z-10 rounded-full bg-white px-3 py-2">
           <View className="flex-row items-center gap-1">
             <Star size={15} fill="#111111" color="#111111" />
-            <Text className="text-[15px] font-semibold text-[#111111]">
-              {rating}
-            </Text>
+            <Text className="text-[15px] font-semibold text-[#111111]">{place.rating}</Text>
           </View>
         </View>
 
@@ -122,7 +123,7 @@ function HotelCard({
         <View className="absolute bottom-16 left-8 h-14 w-44 rounded-[18px] bg-[#1A1A1A]" />
         <View
           className="absolute bottom-8 right-9 h-24 w-20 rounded-[18px] border-[5px] bg-[#2E2E2E]"
-          style={{ borderColor: tint }}
+          style={{ borderColor: place.tint }}
         />
         <View className="absolute bottom-10 left-24 h-9 w-9 rounded-full bg-white" />
         <View className="absolute left-32 top-8 h-16 w-16 rounded-[16px] bg-[#2A2A2A]" />
@@ -134,18 +135,13 @@ function HotelCard({
       </View>
 
       <View className="-mt-8 rounded-[26px] bg-[rgba(214,195,163,0.72)] px-4 pb-4 pt-4">
-        <Text className="text-[22px] font-semibold text-white">{name}</Text>
+        <Text className="text-[22px] font-semibold text-white">{place.name}</Text>
+        <Text className="mt-1 text-[13px] font-medium text-white/90">{place.location}</Text>
         <View className="mt-2 flex-row items-end gap-1">
-          <Text className="text-[28px] font-semibold tracking-[-0.7px] text-white">
-            {price}
-          </Text>
-          <Text className="pb-1 text-[14px] font-medium text-white/90">
-            {unit}
-          </Text>
+          <Text className="text-[28px] font-semibold tracking-[-0.7px] text-white">{place.price}</Text>
+          <Text className="pb-1 text-[14px] font-medium text-white/90">{place.unit}</Text>
         </View>
-        <Text className="mt-3 text-[13px] font-medium text-white/90">
-          {details}
-        </Text>
+        <Text className="mt-3 text-[13px] font-medium text-white/90">{place.details}</Text>
 
         <View className="mt-4 flex-row items-center justify-end">
           <Pressable className="h-12 w-12 items-center justify-center rounded-full bg-white">
@@ -167,6 +163,45 @@ function HotelCard({
 
 export default function Index() {
   const [liveLocation, setLiveLocation] = useState<LiveLocation>(locationFallback);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchAnim = useRef(new Animated.Value(0)).current;
+
+  const filteredPlaces = featuredPlaces.filter((place) => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) {
+      return true;
+    }
+
+    return [place.name, place.location, place.details].some((value) =>
+      value.toLowerCase().includes(query),
+    );
+  });
+
+  const openSearch = () => {
+    setSearchVisible(true);
+    Animated.timing(searchAnim, {
+      toValue: 1,
+      duration: 240,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const closeSearch = () => {
+    Animated.timing(searchAnim, {
+      toValue: 0,
+      duration: 180,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) {
+        setSearchVisible(false);
+        setSearchQuery("");
+      }
+    });
+  };
 
   useEffect(() => {
     let active = true;
@@ -189,7 +224,7 @@ export default function Index() {
       if (active) {
         setLiveLocation({
           label: placeLabel,
-          
+          details: detailLabel
         });
       }
     };
@@ -235,10 +270,7 @@ export default function Index() {
   return (
     <SafeAreaView className="flex-1 bg-[#E7DFD3]">
       <StatusBar barStyle="dark-content" backgroundColor="#E7DFD3" />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerClassName="px-4 pb-6 pt-2"
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-4 pb-6 pt-2">
         <View className="rounded-[32px] bg-[#E7DFD3] px-2 pb-6 pt-2">
           <View className="flex-row items-center justify-between px-2">
             <View className="flex-row items-center gap-3">
@@ -248,12 +280,8 @@ export default function Index() {
                 resizeMode="cover"
               />
               <View>
-                <Text className="text-[22px] font-semibold text-[#1B1916]">
-                  Hello, Agnes
-                </Text>
-                <Text className="mt-1 text-[13px] text-[#6F685F]">
-                  Where to today, Agnes?
-                </Text>
+                <Text className="text-[22px] font-semibold text-[#1B1916]">Hello, Agnes</Text>
+                <Text className="mt-1 text-[13px] text-[#6F685F]">Where to today, Agnes?</Text>
               </View>
             </View>
 
@@ -263,26 +291,54 @@ export default function Index() {
           </View>
 
           <View className="mt-5 flex-row items-center gap-3 px-2">
-            <View className="flex-1 flex-row items-center gap-2 rounded-full bg-white px-4 py-4">
+            <View className="flex-1 flex-row items-start gap-2 rounded-full bg-white px-4 py-4">
               <MapPin size={18} color="#111111" />
               <View className="flex-1">
                
-                <Text className="text-[14px] font-medium text-[#1B1916]">
-                  {liveLocation.label}
-                </Text>
-               
+                <Text className="text-[14px] font-medium text-[#1B1916]">{liveLocation.label}</Text>
+             
               </View>
             </View>
-            <Pressable className="h-[58px] w-[58px] items-center justify-center rounded-full bg-white">
+
+            <Pressable
+              onPress={searchVisible ? closeSearch : openSearch}
+              className="h-[58px] w-[58px] items-center justify-center rounded-full bg-white"
+            >
               <Search size={20} color="#111111" />
             </Pressable>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerClassName="gap-3 px-2 pt-5"
+          <Animated.View
+            className="px-2"
+            style={{
+              opacity: searchAnim,
+              maxHeight: searchAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 68] }),
+              transform: [
+                {
+                  translateY: searchAnim.interpolate({ inputRange: [0, 1], outputRange: [-10, 0] }),
+                },
+              ],
+            }}
           >
+            {searchVisible ? (
+              <View className="mt-3 flex-row items-center gap-3 rounded-full border border-[#E0D5C6] bg-white px-4 py-3.5">
+                <Search size={18} color="#111111" />
+                <TextInput
+                  autoFocus
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Search any tour place"
+                  placeholderTextColor="#8E867B"
+                  className="flex-1 py-2 text-[14px] text-[#1B1916]"
+                />
+                <Pressable onPress={closeSearch} hitSlop={10}>
+                  <Text className="text-[13px] font-semibold text-[#1B1916]">Close</Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </Animated.View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3 px-2 pt-5">
             {categories.map((category) => (
               <CategoryChip
                 key={category.label}
@@ -294,19 +350,15 @@ export default function Index() {
           </ScrollView>
 
           <View className="mt-6 flex-row items-center justify-between px-2">
-            <Text className="text-[22px] font-semibold text-[#171511]">
-              Top Rated Hotels
-            </Text>
+            <Text className="text-[22px] font-semibold text-[#171511]">Top Rated Hotels</Text>
             <Pressable className="rounded-full bg-white px-4 py-2">
-              <Text className="text-[12px] font-medium text-[#171511]">
-                View all ↗
-              </Text>
+              <Text className="text-[12px] font-medium text-[#171511]">View all ↗</Text>
             </Pressable>
           </View>
 
           <View className="mt-4 gap-4 px-1">
-            {featuredPlaces.map((place, index) => (
-              <HotelCard key={place.name} {...place} index={index} />
+            {filteredPlaces.map((place, index) => (
+              <HotelCard key={place.name} place={place} index={index} />
             ))}
           </View>
         </View>
